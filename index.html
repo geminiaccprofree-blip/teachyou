@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SYNAPSE — AI-Powered Teaching Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+/* ─── CSS VARIABLES ─── */
+:root{
+  --bg:#020510;
+  --bg2:#050d1f;
+  --accent:#00f5ff;
+  --accent2:#7c3aed;
+  --accent3:#ff6b35;
+  --text:#ffffff;
+  --muted:rgba(200,230,255,0.55);
+  --card:rgba(5,15,40,0.75);
+  --border:rgba(0,245,255,0.12);
+  --border2:rgba(0,245,255,0.25);
+  --glow:0 0 40px rgba(0,245,255,0.18);
+  --glow2:0 0 40px rgba(124,58,237,0.18);
+  --radius:20px;
+}
+
+/* ─── RESET ─── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-weight:300;
+  line-height:1.75;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* ─── CUSTOM SCROLLBAR ─── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:3px}
+
+/* ─── CUSTOM CURSOR ─── */
+#cursor-dot{
+  position:fixed;width:10px;height:10px;
+  background:var(--accent);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:transform .1s,background .2s;
+  mix-blend-mode:difference;
+}
+#cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:1.5px solid rgba(0,245,255,0.6);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:transform .12s cubic-bezier(.25,.46,.45,.94),width .2s,height .2s;
+}
+body:has(a:hover) #cursor-dot,
+body:has(button:hover) #cursor-dot{transform:translate(-50%,-50%) scale(2.5);background:var(--accent3)}
+body:has(a:hover) #cursor-ring,
+body:has(button:hover) #cursor-ring{width:52px;height:52px;border-color:var(--accent3)}
+
+/* ─── CANVAS PARTICLES ─── */
+#particles-canvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;z-index:0;
+  opacity:.45;
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:1000;padding:20px 56px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .4s,backdrop-filter .4s,padding .3s;
+}
+nav.scrolled{
+  background:rgba(2,5,16,0.88);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  padding:14px 56px;
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;
+  font-size:1.45rem;font-weight:800;
+  letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-decoration:none;
+}
+.nav-links{display:flex;align-items:center;gap:36px;list-style:none}
+.nav-links a{
+  color:var(--muted);text-decoration:none;
+  font-family:'Space Mono',monospace;
+  font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--accent)}
+.nav-cta{
+  padding:10px 28px;border-radius:50px;
+  border:1.5px solid var(--accent);
+  color:var(--accent);font-family:'Space Mono',monospace;
+  font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;
+  background:transparent;cursor:none;text-decoration:none;
+  transition:background .2s,color .2s,box-shadow .2s;
+}
+.nav-cta:hover{background:var(--accent);color:var(--bg);box-shadow:0 0 28px rgba(0,245,255,0.4)}
+
+/* ─── HERO ─── */
+#hero{
+  position:relative;min-height:100vh;
+  display:flex;align-items:center;
+  padding:0 56px;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,245,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,255,.04) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;
+}
+.hero-corner{
+  position:absolute;width:60px;height:60px;
+  pointer-events:none;
+}
+.hero-corner.tl{top:100px;left:56px;border-top:1.5px solid var(--accent);border-left:1.5px solid var(--accent)}
+.hero-corner.tr{top:100px;right:56px;border-top:1.5px solid var(--accent);border-right:1.5px solid var(--accent)}
+.hero-corner.bl{bottom:80px;left:56px;border-bottom:1.5px solid var(--accent);border-left:1.5px solid var(--accent)}
+.hero-corner.br{bottom:80px;right:56px;border-bottom:1.5px solid var(--accent);border-right:1.5px solid var(--accent)}
+.hero-gps{
+  position:absolute;font-family:'Space Mono',monospace;
+  font-size:.62rem;color:rgba(0,245,255,.4);letter-spacing:1.5px;
+}
+.hero-gps.top-left{top:174px;left:72px}
+.hero-gps.bot-right{bottom:144px;right:72px}
+
+.hero-content{position:relative;z-index:2;max-width:900px}
+.status-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:8px 20px;border-radius:50px;
+  border:1px solid var(--border2);
+  background:rgba(0,245,255,.06);
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  letter-spacing:2px;text-transform:uppercase;color:var(--accent);
+  margin-bottom:32px;
+}
+.pulse-dot{
+  width:8px;height:8px;background:var(--accent);border-radius:50%;
+  animation:pulse 1.8s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,245,255,.5)}50%{box-shadow:0 0 0 8px rgba(0,245,255,0)}}
+
+.hero-title{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(3.5rem,8vw,7.5rem);
+  line-height:.96;letter-spacing:-3px;
+  margin-bottom:28px;
+}
+.hero-title .line1{display:block;color:#fff}
+.hero-title .glitch-text{
+  display:inline-block;position:relative;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 60%,var(--accent3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-role{
+  font-family:'Space Mono',monospace;font-size:clamp(.82rem,1.4vw,1rem);
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:20px;
+}
+.hero-role span{color:var(--accent)}
+.hero-tagline{
+  font-size:clamp(1rem,1.8vw,1.22rem);color:var(--muted);
+  max-width:580px;line-height:1.8;margin-bottom:44px;
+}
+.hero-buttons{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:60px}
+.btn-primary{
+  padding:16px 38px;border-radius:50px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:'Space Mono',monospace;
+  font-size:.82rem;letter-spacing:1.5px;text-transform:uppercase;
+  border:none;cursor:none;text-decoration:none;
+  transition:transform .2s,box-shadow .2s;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,245,255,.35)}
+.btn-ghost{
+  padding:16px 38px;border-radius:50px;
+  border:1.5px solid var(--border2);color:var(--text);
+  font-family:'Space Mono',monospace;font-size:.82rem;
+  letter-spacing:1.5px;text-transform:uppercase;
+  background:transparent;cursor:none;text-decoration:none;
+  transition:border-color .2s,box-shadow .2s;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.btn-ghost:hover{border-color:var(--accent);box-shadow:0 0 28px rgba(0,245,255,.15)}
+.hero-stats{
+  display:flex;gap:48px;flex-wrap:wrap;
+}
+.hero-stat .num{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:2.2rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-stat .lbl{
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+}
+.hero-scroll{
+  position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-family:'Space Mono',monospace;font-size:.62rem;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+}
+.scroll-line{width:1px;height:60px;background:linear-gradient(var(--accent),transparent);animation:scrollAnim 2s infinite}
+@keyframes scrollAnim{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ─── SECTION COMMONS ─── */
+section{position:relative;z-index:2}
+.section-inner{max-width:1200px;margin:0 auto;padding:100px 56px}
+.section-divider{
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);
+  opacity:.25;max-width:1200px;margin:0 auto;
+}
+.section-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);
+  margin-bottom:16px;
+}
+.section-tag::before{content:'';display:block;width:28px;height:1px;background:var(--accent)}
+.section-title{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2rem,4vw,3rem);line-height:1.1;letter-spacing:-1.5px;
+  margin-bottom:16px;
+}
+.section-sub{
+  color:var(--muted);font-size:1.05rem;
+  max-width:540px;margin-bottom:64px;
+}
+
+/* ─── REVEAL ANIMATION ─── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ─── MODES SECTION ─── */
+.modes-tabs{
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:48px;
+  background:rgba(5,15,40,.6);padding:8px;border-radius:14px;
+  border:1px solid var(--border);backdrop-filter:blur(20px);
+  width:fit-content;
+}
+.mode-tab{
+  padding:10px 24px;border-radius:10px;
+  font-family:'Space Mono',monospace;font-size:.74rem;
+  letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);background:transparent;
+  border:none;cursor:none;transition:all .25s;
+}
+.mode-tab.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;
+}
+.mode-tab:hover:not(.active){color:var(--accent)}
+
+.mode-panels{position:relative}
+.mode-panel{display:none}
+.mode-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:28px;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.mode-card{
+  background:var(--card);backdrop-filter:blur(30px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:36px;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s,transform .3s;
+}
+.mode-card:hover{
+  border-color:var(--border2);
+  box-shadow:var(--glow);
+  transform:translateY(-4px);
+}
+.mode-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.mode-card:hover::before{opacity:1}
+.card-icon-box{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(0,245,255,.1);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:var(--accent);margin-bottom:20px;
+}
+.card-icon-box.purple{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);color:var(--accent2)}
+.card-icon-box.orange{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.3);color:var(--accent3)}
+.card-icon-box.mixed{background:rgba(0,245,255,.07);color:var(--accent)}
+.mode-card h3{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:1.2rem;margin-bottom:10px;
+}
+.mode-card p{color:var(--muted);font-size:.95rem;line-height:1.7;margin-bottom:20px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{
+  padding:5px 14px;border-radius:50px;
+  background:rgba(0,245,255,.06);
+  border:1px solid var(--border);
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  letter-spacing:1px;text-transform:uppercase;color:var(--accent);
+}
+.tag.purple{background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.2);color:var(--accent2)}
+.tag.orange{background:rgba(255,107,53,.08);border-color:rgba(255,107,53,.2);color:var(--accent3)}
+
+/* Mode accents */
+.mode-panel[data-mode="optimized"] .card-icon-box:first-child{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.25);color:var(--accent3)}
+.mode-panel[data-mode="unconventional"] .mode-card:hover{border-color:rgba(124,58,237,.45);box-shadow:var(--glow2)}
+.mode-panel[data-mode="automated"] .mode-card:hover{border-color:rgba(0,245,255,.3);box-shadow:0 0 40px rgba(0,245,255,.12)}
+
+/* Wide card */
+.mode-card.wide{grid-column:1/-1}
+
+/* ─── WORKFLOW SECTION ─── */
+.workflow-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:0;position:relative;
+}
+.workflow-grid::after{
+  content:'';position:absolute;
+  top:50px;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--accent3),transparent);
+  opacity:.3;
+}
+.workflow-step{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:0 16px;position:relative;z-index:1;
+}
+.step-num{
+  width:100px;height:100px;border-radius:50%;
+  border:1.5px solid var(--border2);
+  background:rgba(5,15,40,.9);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:4px;margin-bottom:20px;
+  transition:border-color .3s,box-shadow .3s;
+}
+.workflow-step:hover .step-num{border-color:var(--accent);box-shadow:0 0 28px rgba(0,245,255,.2)}
+.step-num i{font-size:1.4rem;color:var(--accent)}
+.step-num span{
+  font-family:'Space Mono',monospace;font-size:.6rem;
+  letter-spacing:1px;color:var(--muted);
+}
+.workflow-step h4{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:.95rem;margin-bottom:8px;
+}
+.workflow-step p{color:var(--muted);font-size:.85rem;line-height:1.6}
+
+/* ─── COMPARISON TABLE ─── */
+.comparison-wrap{overflow-x:auto}
+.comparison-table{
+  width:100%;border-collapse:collapse;
+  min-width:700px;
+}
+.comparison-table th{
+  background:rgba(0,245,255,.06);
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent);padding:18px 24px;
+  border-bottom:1px solid var(--border2);text-align:left;
+}
+.comparison-table td{
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+  font-size:.95rem;color:var(--muted);
+  vertical-align:top;
+}
+.comparison-table tr:last-child td{border-bottom:none}
+.comparison-table tr:hover td{background:rgba(0,245,255,.03)}
+.comparison-table td:first-child{
+  font-family:'Syne',sans-serif;font-weight:700;
+  color:var(--text);font-size:1rem;
+}
+.rating-bars{display:flex;gap:4px;align-items:center}
+.bar{
+  height:6px;border-radius:3px;
+  background:var(--accent);opacity:.25;
+  width:28px;transition:opacity .3s;
+}
+.bar.lit{opacity:1}
+.bar.orange.lit{background:var(--accent3)}
+.bar.purple.lit{background:var(--accent2)}
+.rating-label{
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  letter-spacing:1px;margin-left:8px;color:var(--muted);
+}
+
+/* ─── TECH STACK ─── */
+.stack-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+.stack-card{
+  background:var(--card);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;
+  transition:border-color .3s,transform .3s;
+}
+.stack-card:hover{border-color:var(--border2);transform:translateY(-4px)}
+.stack-card i{font-size:1.6rem;color:var(--accent);margin-bottom:14px;display:block}
+.stack-card h4{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:1rem;margin-bottom:8px;
+}
+.stack-card p{color:var(--muted);font-size:.85rem;line-height:1.6}
+
+/* ─── FEATURE HIGHLIGHTS ─── */
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.feature-row{
+  display:flex;align-items:flex-start;gap:16px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:24px;
+  transition:border-color .3s;
+}
+.feature-row:hover{border-color:var(--border2)}
+.feature-icon{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  background:rgba(0,245,255,.1);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);font-size:1rem;
+}
+.feature-icon.p{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.25);color:var(--accent2)}
+.feature-icon.o{background:rgba(255,107,53,.1);border-color:rgba(255,107,53,.25);color:var(--accent3)}
+.feature-text h4{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:.95rem;margin-bottom:6px;
+}
+.feature-text p{color:var(--muted);font-size:.88rem;line-height:1.6}
+
+/* ─── CTA SECTION ─── */
+.cta-box{
+  background:linear-gradient(135deg,rgba(0,245,255,.07),rgba(124,58,237,.07));
+  border:1px solid var(--border2);border-radius:28px;
+  padding:80px 60px;text-align:center;position:relative;overflow:hidden;
+}
+.cta-box::before{
+  content:'';position:absolute;
+  top:-60px;right:-60px;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(var(--accent2),transparent 70%);
+  opacity:.12;pointer-events:none;
+}
+.cta-box::after{
+  content:'';position:absolute;
+  bottom:-60px;left:-60px;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(var(--accent),transparent 70%);
+  opacity:.1;pointer-events:none;
+}
+.cta-box h2{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2rem,4vw,3rem);letter-spacing:-1.5px;
+  margin-bottom:16px;position:relative;z-index:1;
+}
+.cta-box p{
+  color:var(--muted);font-size:1.05rem;
+  margin-bottom:44px;position:relative;z-index:1;
+}
+.cta-buttons{
+  display:flex;gap:18px;justify-content:center;
+  flex-wrap:wrap;position:relative;z-index:1;
+}
+
+/* ─── INPUT WIDGET ─── */
+.input-widget{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:20px;padding:36px;
+  display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;
+  max-width:780px;margin:0 auto 48px;
+}
+.input-widget label{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);
+  display:block;margin-bottom:10px;
+}
+.input-widget textarea{
+  width:100%;background:rgba(0,0,0,.3);
+  border:1px solid var(--border);border-radius:12px;
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:1rem;padding:16px;resize:none;height:120px;
+  transition:border-color .2s;outline:none;
+}
+.input-widget textarea:focus{border-color:var(--accent)}
+.input-widget textarea::placeholder{color:var(--muted)}
+.widget-btn{
+  padding:18px 28px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#fff;font-family:'Space Mono',monospace;
+  font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:none;white-space:nowrap;height:fit-content;
+  transition:box-shadow .2s,transform .2s;
+}
+.widget-btn:hover{box-shadow:0 0 32px rgba(0,245,255,.3);transform:translateY(-2px)}
+.widget-modes{
+  grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;
+}
+.w-mode{
+  padding:7px 18px;border-radius:50px;
+  border:1px solid var(--border);
+  font-family:'Space Mono',monospace;font-size:.68rem;
+  letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+  background:transparent;cursor:none;transition:all .2s;
+}
+.w-mode.active,.w-mode:hover{
+  border-color:var(--accent);color:var(--accent);
+  background:rgba(0,245,255,.06);
+}
+
+/* ─── FOOTER ─── */
+footer{
+  position:relative;z-index:2;
+  border-top:1px solid var(--border);
+  padding:48px 56px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:24px;max-width:1312px;margin:0 auto;
+}
+.footer-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.footer-copy{
+  color:var(--muted);font-family:'Space Mono',monospace;font-size:.68rem;
+  letter-spacing:1px;
+}
+.footer-socials{display:flex;gap:18px}
+.footer-socials a{
+  color:var(--muted);font-size:1.1rem;transition:color .2s;
+  text-decoration:none;
+}
+.footer-socials a:hover{color:var(--accent)}
+
+/* ─── SCROLL TO TOP ─── */
+#scroll-top{
+  position:fixed;bottom:36px;right:36px;
+  width:46px;height:46px;border-radius:12px;
+  background:rgba(5,15,40,.9);border:1.5px solid var(--border2);
+  color:var(--accent);display:flex;align-items:center;justify-content:center;
+  cursor:none;z-index:999;opacity:0;pointer-events:none;
+  transform:translateY(10px);transition:all .3s;
+}
+#scroll-top.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+#scroll-top:hover{background:rgba(0,245,255,.12);box-shadow:0 0 20px rgba(0,245,255,.2)}
+
+/* ─── GLITCH KEYFRAMES ─── */
+@keyframes glitch{
+  0%,100%{text-shadow:none;transform:none}
+  20%{text-shadow:3px 0 0 var(--accent),-3px 0 0 var(--accent2);transform:skewX(-3deg)}
+  40%{text-shadow:-3px 0 0 var(--accent),3px 0 0 var(--accent2);transform:skewX(3deg)}
+  60%{text-shadow:3px 0 0 var(--accent3),-3px 0 0 var(--accent);transform:none}
+  80%{text-shadow:none;transform:skewX(-1deg)}
+}
+.glitch-active .glitch-text{animation:glitch .4s ease}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:1024px){
+  .stack-grid{grid-template-columns:repeat(2,1fr)}
+  .workflow-grid{grid-template-columns:repeat(3,1fr);row-gap:40px}
+  .workflow-grid::after{display:none}
+  .mode-panel.active{grid-template-columns:1fr}
+  .mode-card.wide{grid-column:auto}
+}
+@media(max-width:768px){
+  nav{padding:16px 24px}
+  nav.scrolled{padding:12px 24px}
+  .nav-links{display:none}
+  .section-inner{padding:70px 24px}
+  #hero{padding:0 24px}
+  .hero-stats{gap:28px}
+  .features-grid{grid-template-columns:1fr}
+  .stack-grid{grid-template-columns:1fr}
+  .workflow-grid{grid-template-columns:1fr 1fr;row-gap:32px}
+  .cta-box{padding:48px 28px}
+  footer{padding:36px 24px;flex-direction:column;align-items:flex-start}
+  .input-widget{grid-template-columns:1fr;padding:24px}
+  .hero-corner.tr,.hero-corner.br{display:none}
+  .hero-gps.bot-right{display:none}
+}
+@media(max-width:480px){
+  .workflow-grid{grid-template-columns:1fr}
+  .modes-tabs{width:100%}
+  .mode-tab{font-size:.65rem;padding:9px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- Particles Canvas -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- ─── NAV ─── -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">SYNAPSE.</a>
+  <ul class="nav-links">
+    <li><a href="#modes">Modes</a></li>
+    <li><a href="#workflow">Workflow</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#compare">Compare</a></li>
+    <li><a href="#stack">Stack</a></li>
+  </ul>
+  <a href="#try" class="nav-cta">Try Free</a>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-corner tl"></div>
+  <div class="hero-corner tr"></div>
+  <div class="hero-corner bl"></div>
+  <div class="hero-corner br"></div>
+  <span class="hero-gps top-left">33°43′N 73°04′E</span>
+  <span class="hero-gps bot-right">LAT 33.729 — LON 73.093</span>
+
+  <div class="hero-content">
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      AI Engine — Active
+    </div>
+
+    <h1 class="hero-title" id="hero-title">
+      <span class="line1">TRANSFORM</span>
+      <span class="glitch-text">ANY TOPIC</span>
+    </h1>
+
+    <p class="hero-role">AI-Powered Teaching Engine &nbsp;/&nbsp; <span>4 Cognitive Modes</span> &nbsp;/&nbsp; Zero Setup</p>
+
+    <p class="hero-tagline">
+      Drop any raw concept, textbook chapter, or skill — SYNAPSE restructures it into a complete pedagogical workflow with analogies, quizzes, practice tasks, and measurable mastery checkpoints.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#try" class="btn-primary"><i class="fa-solid fa-brain"></i> Start Teaching</a>
+      <a href="#modes" class="btn-ghost"><i class="fa-solid fa-layer-group"></i> Explore Modes</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num" data-target="4">0</div>
+        <div class="lbl">Teaching Modes</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" data-target="80">0</div>
+        <div class="lbl">% Mastery Rate</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" data-target="12">0</div>
+        <div class="lbl">Output Types</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" data-target="0">0</div>
+        <div class="lbl">Cost to Run</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── TRY WIDGET ─── -->
+<section id="try">
+  <div class="section-inner" style="padding-bottom:60px">
+    <div class="section-tag reveal">Input Engine</div>
+    <h2 class="section-title reveal reveal-delay-1">Paste Any Topic. <br><span style="color:var(--accent)">Pick Your Mode.</span></h2>
+    <p class="section-sub reveal reveal-delay-2">SYNAPSE accepts raw text, bullet lists, syllabi, or a single word. The AI handles the rest.</p>
+
+    <div class="input-widget reveal reveal-delay-3">
+      <div>
+        <label>Topic or Raw Content</label>
+        <textarea placeholder="e.g., 'Explain the TCP/IP model for networking beginners' or paste a full chapter..."></textarea>
+      </div>
+      <button class="widget-btn"><i class="fa-solid fa-bolt"></i><br>Generate</button>
+      <div class="widget-modes">
+        <button class="w-mode active">Standard LMS</button>
+        <button class="w-mode">80/20 Engine</button>
+        <button class="w-mode">Socratic Mode</button>
+        <button class="w-mode">Auto Pipeline</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── MODES SECTION ─── -->
+<section id="modes">
+  <div class="section-inner">
+    <div class="section-tag reveal">4 Solutions</div>
+    <h2 class="section-title reveal reveal-delay-1">Cognitive Teaching<br><span style="color:var(--accent)">Architecture</span></h2>
+    <p class="section-sub reveal reveal-delay-2">Each mode is engineered for a different learning context — from structured curriculum delivery to zero-touch automated content generation.</p>
+
+    <!-- Tabs -->
+    <div class="modes-tabs reveal reveal-delay-3" id="mode-tabs">
+      <button class="mode-tab active" data-target="standard">01 — Standard</button>
+      <button class="mode-tab" data-target="optimized">02 — 80/20 Engine</button>
+      <button class="mode-tab" data-target="unconventional">03 — Unconventional</button>
+      <button class="mode-tab" data-target="automated">04 — Automated</button>
+    </div>
+
+    <!-- Standard Panel -->
+    <div class="mode-panel active" id="panel-standard">
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-graduation-cap"></i></div>
+        <h3>Core Workflow</h3>
+        <p>User inputs a topic or uploads a syllabus. SYNAPSE generates a linear curriculum: Introduction → Concept Breakdown → Worked Examples → Summary → Assessment. Students progress gate-by-gate; each module unlocks only after the previous is completed.</p>
+        <div class="tags">
+          <span class="tag">Linear Progression</span>
+          <span class="tag">Gate-Based Access</span>
+          <span class="tag">Curriculum Coverage</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <h3>Teaching Output</h3>
+        <p>Every module includes: a plain-language definition, a real-world analogy, a step-by-step worked example, common misconceptions flagged, and a "check your understanding" summary. Tone adapts to declared learner level (beginner / intermediate / expert).</p>
+        <div class="tags">
+          <span class="tag">Analogy Engine</span>
+          <span class="tag">Level Adaptive</span>
+          <span class="tag">Misconception Flags</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-clipboard-question"></i></div>
+        <h3>Engagement Layer</h3>
+        <p>Auto-generated MCQ quiz after each module. Spaced-repetition flashcard deck exported at module end. Wrong answers trigger instant micro-explanations. Completion certificate generated as PDF on course finish.</p>
+        <div class="tags">
+          <span class="tag">MCQ Quizzes</span>
+          <span class="tag">Spaced Repetition</span>
+          <span class="tag">PDF Certificate</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-layer-group"></i></div>
+        <h3>Tech Stack</h3>
+        <p>LLM (Claude / GPT-4) for content generation; Anki-compatible export for flashcards; jsPDF for certificate output; Chart.js for progress dashboards; LocalStorage for session state persistence.</p>
+        <div class="tags">
+          <span class="tag">LLM Core</span>
+          <span class="tag">Anki Export</span>
+          <span class="tag">Chart.js</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 80/20 Panel -->
+    <div class="mode-panel" id="panel-optimized" data-mode="optimized">
+      <div class="mode-card">
+        <div class="card-icon-box orange"><i class="fa-solid fa-bolt"></i></div>
+        <h3>Core Workflow</h3>
+        <p>Input enters the Pareto Extractor — the AI identifies the critical 20% of concepts that produce 80% of practical mastery. Non-essential detail is stripped. Output is a high-density "power module" covering only what matters for real-world application.</p>
+        <div class="tags orange">
+          <span class="tag orange">Pareto Extraction</span>
+          <span class="tag orange">Density-First</span>
+          <span class="tag orange">Application-Driven</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box orange"><i class="fa-solid fa-fire"></i></div>
+        <h3>Teaching Output</h3>
+        <p>One-pager mind-map of the entire topic. Three killer examples that unlock 80% of understanding. Comparison table: "what most people learn" vs "what actually matters." Pattern recognition cheat sheet for rapid recall in tests and interviews.</p>
+        <div class="tags orange">
+          <span class="tag orange">Mind Map</span>
+          <span class="tag orange">Cheat Sheet</span>
+          <span class="tag orange">Pattern Cards</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box orange"><i class="fa-solid fa-stopwatch"></i></div>
+        <h3>Engagement Layer</h3>
+        <p>Timed 5-question "mastery gate" quiz — pass in under 3 minutes to prove real understanding. Instant correction feedback. "Teach it back" prompt: student must explain the concept in plain language before unlocking the next power module.</p>
+        <div class="tags orange">
+          <span class="tag orange">Timed Gates</span>
+          <span class="tag orange">Teach-Back Mode</span>
+          <span class="tag orange">Speed Drills</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box orange"><i class="fa-solid fa-microchip"></i></div>
+        <h3>Tech Stack</h3>
+        <p>LLM with custom Pareto-extraction system prompt; D3.js for visual mind maps; Canva API or html2canvas for cheat sheet PDF export; timer logic in vanilla JS; summary stored in IndexedDB for offline access.</p>
+        <div class="tags orange">
+          <span class="tag orange">D3.js Maps</span>
+          <span class="tag orange">html2canvas</span>
+          <span class="tag orange">IndexedDB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unconventional Panel -->
+    <div class="mode-panel" id="panel-unconventional" data-mode="unconventional">
+      <div class="mode-card">
+        <div class="card-icon-box purple"><i class="fa-solid fa-masks-theater"></i></div>
+        <h3>Core Workflow</h3>
+        <p>Choose your adventure: Socratic Dialogue (AI asks questions, student reasons to the answer), Interactive Story Mode (concept embedded in a narrative world), or Boss Fight Assessment (concept mastery unlocks each "boss" level — fail and the boss explains your weakness).</p>
+        <div class="tags">
+          <span class="tag purple">Socratic AI</span>
+          <span class="tag purple">Story Mode</span>
+          <span class="tag purple">Boss Fights</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box purple"><i class="fa-solid fa-dice-d20"></i></div>
+        <h3>Teaching Output</h3>
+        <p>In Story Mode: concepts are woven into a plot — student "discovers" Ohm's Law by fixing circuits in a spaceship. In Socratic Mode: AI never gives the answer, only better questions. In Boss Fight: each topic becomes a dungeon with mini-bosses representing sub-concepts.</p>
+        <div class="tags">
+          <span class="tag purple">Narrative Embedding</span>
+          <span class="tag purple">Question Trees</span>
+          <span class="tag purple">Gamified Mastery</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box purple"><i class="fa-solid fa-trophy"></i></div>
+        <h3>Engagement Layer</h3>
+        <p>XP + Streak system. Concept-based achievement badges (e.g., "Recursion Slayer"). Weekly leaderboard. Optional mnemonic song generation via Suno AI — AI writes a 30-second rap to lock in key formulas. Social share card on level completion.</p>
+        <div class="tags">
+          <span class="tag purple">XP / Streaks</span>
+          <span class="tag purple">Suno Mnemonics</span>
+          <span class="tag purple">Leaderboard</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h3>Tech Stack</h3>
+        <p>LLM for Socratic prompting and story generation; Suno AI for mnemonic songs; Phaser.js for browser-based boss fight game engine; Supabase for leaderboard + progress data; Canvas API for custom badge artwork generation.</p>
+        <div class="tags">
+          <span class="tag purple">Phaser.js</span>
+          <span class="tag purple">Suno AI</span>
+          <span class="tag purple">Supabase</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Automated Panel -->
+    <div class="mode-panel" id="panel-automated" data-mode="automated">
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-robot"></i></div>
+        <h3>Core Workflow</h3>
+        <p>Zero-touch pipeline. Teacher inputs a topic once. SYNAPSE Auto-Pipeline triggers: Script Generator → Slide Deck Creator → Quiz Builder → Flashcard Exporter → Summary Email Drafter. Full course content package delivered in under 90 seconds.</p>
+        <div class="tags">
+          <span class="tag">Zero-Touch</span>
+          <span class="tag">Pipeline Trigger</span>
+          <span class="tag">90-Second Output</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-film"></i></div>
+        <h3>Teaching Output</h3>
+        <p>AI-generated video script (hook + explanation + example + CTA format). Slide deck outline (title + 8 content slides + summary slide). Anki flashcard deck (20 cards minimum). Social media caption pack (3x Twitter threads + 1x LinkedIn post). All downloadable in one ZIP.</p>
+        <div class="tags">
+          <span class="tag">Video Scripts</span>
+          <span class="tag">Slide Decks</span>
+          <span class="tag">Caption Packs</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-gears"></i></div>
+        <h3>Engagement Layer</h3>
+        <p>AI Avatar lecture video generated via D-ID using the script. Auto-scheduled drip email sequence (Day 1: intro, Day 3: quiz, Day 7: review). Practice task generator outputs a real-world project brief for each topic. All assets bundled, ready to publish.</p>
+        <div class="tags">
+          <span class="tag">D-ID Avatars</span>
+          <span class="tag">Email Drips</span>
+          <span class="tag">Project Briefs</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon-box"><i class="fa-solid fa-network-wired"></i></div>
+        <h3>Tech Stack</h3>
+        <p>n8n for workflow orchestration; LLM (Claude API) for all content generation; D-ID API for avatar videos; Resend / Mailchimp for email drip sequences; Google Slides API for deck output; JSZip for bundle packaging and one-click download.</p>
+        <div class="tags">
+          <span class="tag">n8n Pipelines</span>
+          <span class="tag">D-ID API</span>
+          <span class="tag">JSZip</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── WORKFLOW SECTION ─── -->
+<section id="workflow">
+  <div class="section-inner">
+    <div class="section-tag reveal">How It Works</div>
+    <h2 class="section-title reveal reveal-delay-1">5-Step Pedagogical<br><span style="color:var(--accent)">Processing Chain</span></h2>
+    <p class="section-sub reveal reveal-delay-2">From raw input to structured learning experience in seconds — no curriculum designer needed.</p>
+
+    <div class="workflow-grid reveal reveal-delay-3">
+      <div class="workflow-step">
+        <div class="step-num">
+          <i class="fa-solid fa-upload"></i>
+          <span>STEP 01</span>
+        </div>
+        <h4>Ingest</h4>
+        <p>Raw topic, text, URL, or file dropped into SYNAPSE input layer</p>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>STEP 02</span>
+        </div>
+        <h4>Extract</h4>
+        <p>LLM identifies core concepts, prerequisites, depth level, and learning objectives</p>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">
+          <i class="fa-solid fa-sitemap"></i>
+          <span>STEP 03</span>
+        </div>
+        <h4>Structure</h4>
+        <p>Content mapped into chosen mode's architecture — linear, Pareto, narrative, or pipeline</p>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">
+          <i class="fa-solid fa-pen-nib"></i>
+          <span>STEP 04</span>
+        </div>
+        <h4>Generate</h4>
+        <p>Explanations, examples, analogies, quizzes, flashcards, and practice tasks created</p>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>STEP 05</span>
+        </div>
+        <h4>Deliver</h4>
+        <p>Complete learning package published, exported, or piped into automation workflow</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── FEATURES ─── -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag reveal">Functional Components</div>
+    <h2 class="section-title reveal reveal-delay-1">What Every Mode<br><span style="color:var(--accent)">Ships With</span></h2>
+    <p class="section-sub reveal reveal-delay-2">Shared intelligence layer across all 4 modes — every output is pedagogically complete by default.</p>
+
+    <div class="features-grid reveal reveal-delay-3">
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
+        <div class="feature-text">
+          <h4>Analogy Generator</h4>
+          <p>Complex concepts mapped to familiar real-world parallels. LLM identifies the closest structural analogy from the learner's declared background.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon p"><i class="fa-solid fa-code"></i></div>
+        <div class="feature-text">
+          <h4>Step-by-Step Explainer</h4>
+          <p>Every concept broken into numbered atomic steps. No assumed knowledge. Each step self-contained and reversible for targeted review.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon o"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="feature-text">
+          <h4>Common Errors Module</h4>
+          <p>AI catalogs the 5 most frequent mistakes learners make on each topic, with before/after corrected examples for each error pattern.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-square-check"></i></div>
+        <div class="feature-text">
+          <h4>Practice Task Generator</h4>
+          <p>Generates 3 graded practice tasks per topic — beginner, intermediate, and applied. Each includes success criteria and a model answer.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon p"><i class="fa-solid fa-cards-blank"></i></div>
+        <div class="feature-text">
+          <h4>Flashcard Export</h4>
+          <p>Auto-exports Anki-compatible .apkg decks. Front: concept. Back: full explanation + example + common error note. Sorted by spaced-repetition priority.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon o"><i class="fa-solid fa-chart-bar"></i></div>
+        <div class="feature-text">
+          <h4>Mastery Dashboard</h4>
+          <p>Visual progress tracking per module. Chart.js radar chart shows concept coverage. Session analytics stored in LocalStorage for offline access.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-file-pdf"></i></div>
+        <div class="feature-text">
+          <h4>PDF Export Engine</h4>
+          <p>Full course summary, quiz results, and certificate exportable as branded PDF via html2canvas + jsPDF. No server needed — runs entirely client-side.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon p"><i class="fa-solid fa-language"></i></div>
+        <div class="feature-text">
+          <h4>Bilingual Output</h4>
+          <p>All content generated in English + Urdu side-by-side for Pakistani learners. Toggle per-module. Space Nastaleeq font loaded via Google Fonts for Urdu rendering.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── COMPARISON TABLE ─── -->
+<section id="compare">
+  <div class="section-inner">
+    <div class="section-tag reveal">Evaluation Matrix</div>
+    <h2 class="section-title reveal reveal-delay-1">Mode Comparison<br><span style="color:var(--accent)">Table</span></h2>
+    <p class="section-sub reveal reveal-delay-2">Choose the right cognitive architecture for your use case — each mode has a distinct complexity, engagement, and scalability profile.</p>
+
+    <div class="comparison-wrap reveal reveal-delay-3">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>Target User</th>
+            <th>Complexity</th>
+            <th>User Engagement</th>
+            <th>Scalability</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Standard LMS</td>
+            <td>Institutions, curriculum designers, teachers building full courses</td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <span class="rating-label">LOW</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar"></div><div class="bar"></div>
+                <span class="rating-label">MED</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div>
+                <span class="rating-label">HIGH</span>
+              </div>
+            </td>
+            <td>University courses, corporate onboarding, structured certifications</td>
+          </tr>
+          <tr>
+            <td>80/20 Engine</td>
+            <td>Self-learners, interview preppers, professionals upskilling fast</td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange"></div><div class="bar orange"></div>
+                <span class="rating-label">MED</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange"></div>
+                <span class="rating-label">HIGH</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange lit"></div><div class="bar orange"></div>
+                <span class="rating-label">HIGH</span>
+              </div>
+            </td>
+            <td>Bootcamps, crash courses, competitive exam prep, skill-gap sprints</td>
+          </tr>
+          <tr>
+            <td>Unconventional</td>
+            <td>Students who hate traditional teaching — gamers, story-driven learners</td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div>
+                <span class="rating-label">HIGH</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple lit"></div>
+                <span class="rating-label">MAX</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar purple lit"></div><div class="bar purple lit"></div><div class="bar purple"></div><div class="bar purple"></div><div class="bar purple"></div>
+                <span class="rating-label">LOW</span>
+              </div>
+            </td>
+            <td>K-12 engagement, ADHD learners, hobbyist communities, ed-game platforms</td>
+          </tr>
+          <tr>
+            <td>Automated Pipeline</td>
+            <td>Content creators, coaches, YouTubers, course sellers needing bulk output</td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar"></div>
+                <span class="rating-label">HIGH</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <span class="rating-label">LOW</span>
+              </div>
+            </td>
+            <td>
+              <div class="rating-bars">
+                <div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div><div class="bar lit"></div>
+                <span class="rating-label">MAX</span>
+              </div>
+            </td>
+            <td>YouTube channels, Gumroad courses, newsletter content, Teachable platforms</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── TECH STACK ─── -->
+<section id="stack">
+  <div class="section-inner">
+    <div class="section-tag reveal">Technology</div>
+    <h2 class="section-title reveal reveal-delay-1">Stack Powering<br><span style="color:var(--accent)">SYNAPSE</span></h2>
+    <p class="section-sub reveal reveal-delay-2">Every tool chosen for maximum output quality at zero cost — built on open APIs, client-side rendering, and orchestration-first architecture.</p>
+
+    <div class="stack-grid reveal reveal-delay-3">
+      <div class="stack-card">
+        <i class="fa-solid fa-brain"></i>
+        <h4>Claude / GPT-4</h4>
+        <p>Core LLM backbone — handles Pareto extraction, Socratic prompting, analogy generation, script writing, and all structured content output across all 4 modes.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-diagram-project"></i>
+        <h4>n8n Orchestration</h4>
+        <p>Automated Pipeline mode triggers: topic in → script + quiz + flashcards + slides + email sequence out. Self-hosted, zero recurring cost, full workflow visibility.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-video"></i>
+        <h4>D-ID Avatars</h4>
+        <p>Auto-generates AI avatar lecture videos from the script output. Supports 100+ languages. Used in the Automated Pipeline to produce video lectures without a camera.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-music"></i>
+        <h4>Suno AI</h4>
+        <p>Mnemonic song generation in Unconventional Mode. LLM writes the lyrics (formula + hook), Suno renders a 30-second audio track. Students hum their way to mastery.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-database"></i>
+        <h4>Supabase</h4>
+        <p>Leaderboard, user progress, quiz scores, and streak data stored in Supabase Postgres. Avoids PostgreSQL reserved words — sort_order, record_id naming convention enforced.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-gamepad"></i>
+        <h4>Phaser.js</h4>
+        <p>Browser-based game engine powering Boss Fight Mode. Each topic sub-concept is a mini-boss. Sprites, health bars, and XP all rendered in-browser — no install needed.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-file-export"></i>
+        <h4>html2canvas + jsPDF</h4>
+        <p>Client-side PDF generation for certificates, cheat sheets, and course summaries. No server. Renders any HTML section to canvas, then exports as a print-ready PDF.</p>
+      </div>
+      <div class="stack-card">
+        <i class="fa-solid fa-chart-pie"></i>
+        <h4>Chart.js + D3.js</h4>
+        <p>Chart.js for mastery dashboards and progress rings. D3.js for interactive mind maps in 80/20 Mode — force-directed graph shows concept relationships at a glance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── CTA ─── -->
+<section>
+  <div class="section-inner">
+    <div class="cta-box reveal">
+      <div class="section-tag" style="justify-content:center;margin-bottom:20px">Deploy SYNAPSE</div>
+      <h2>Stop Writing Lessons.<br>Start Engineering Mastery.</h2>
+      <p>Drop any topic. Pick a mode. SYNAPSE handles the curriculum, the quizzes, the flashcards, the videos, and the delivery. Built for educators and creators who have content to ship and no time to lose.</p>
+      <div class="cta-buttons">
+        <a href="#try" class="btn-primary"><i class="fa-solid fa-rocket"></i> Launch Free Instance</a>
+        <a href="#compare" class="btn-ghost"><i class="fa-solid fa-table"></i> View Mode Matrix</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-logo">SYNAPSE.</div>
+  <p class="footer-copy">© 2025 SYNAPSE — AI Teaching Engine · Built by Shanon · All rights reserved</p>
+  <div class="footer-socials">
+    <a href="#"><i class="fa-brands fa-github"></i></a>
+    <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+    <a href="#"><i class="fa-brands fa-figma"></i></a>
+  </div>
+</footer>
+
+<!-- Scroll Top -->
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<script>
+/* ─── CURSOR ─── */
+const dot=document.getElementById('cursor-dot');
+const ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px'});
+(function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
+
+/* ─── PARTICLES ─── */
+const canvas=document.getElementById('particles-canvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+class Particle{
+  constructor(){this.reset()}
+  reset(){
+    this.x=Math.random()*W;this.y=Math.random()*H;
+    this.vx=(Math.random()-.5)*.4;this.vy=(Math.random()-.5)*.4;
+    this.r=Math.random()*2+1;this.opacity=Math.random()*.6+.2;
+  }
+  update(){
+    this.x+=this.vx;this.y+=this.vy;
+    if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset();
+  }
+  draw(){
+    ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(0,245,255,${this.opacity})`;ctx.fill();
+  }
+}
+for(let i=0;i<60;i++)particles.push(new Particle());
+function animParticles(){
+  ctx.clearRect(0,0,W,H);
+  particles.forEach(p=>{p.update();p.draw()});
+  particles.forEach((a,i)=>{
+    particles.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<90){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(0,245,255,${.15*(1-d/90)})`;ctx.lineWidth=.5;ctx.stroke();
+      }
+    });
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+/* ─── NAV SCROLL ─── */
+const navbar=document.getElementById('navbar');
+window.addEventListener('scroll',()=>{
+  navbar.classList.toggle('scrolled',window.scrollY>60);
+  document.getElementById('scroll-top').classList.toggle('visible',window.scrollY>400);
+});
+
+/* ─── GLITCH HERO ─── */
+const heroTitle=document.getElementById('hero-title');
+setInterval(()=>{
+  heroTitle.classList.add('glitch-active');
+  setTimeout(()=>heroTitle.classList.remove('glitch-active'),500);
+},5000);
+
+/* ─── SCROLL REVEAL ─── */
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+/* ─── COUNT UP ─── */
+const countObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!e.target.dataset.counted){
+      e.target.dataset.counted='1';
+      const target=+e.target.dataset.target;
+      const suffix=e.target.dataset.suffix||'';
+      let current=0;const step=target/60;
+      const timer=setInterval(()=>{
+        current=Math.min(current+step,target);
+        e.target.textContent=Math.floor(current)+suffix;
+        if(current>=target)clearInterval(timer);
+      },20);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-target]').forEach(el=>countObs.observe(el));
+
+/* ─── HERO STATS SPECIAL ─── */
+document.querySelectorAll('.hero-stat .num').forEach(el=>{
+  const t=+el.dataset.target;
+  if(t===0)el.textContent='$0';
+  else if(t===80)el.dataset.suffix='%';
+});
+
+/* ─── MODE TABS ─── */
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.target).classList.add('active');
+  });
+});
+
+/* ─── 3D CARD TILT ─── */
+document.querySelectorAll('.mode-card,.stack-card,.feature-row').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const rect=card.getBoundingClientRect();
+    const x=((e.clientX-rect.left)/rect.width-.5)*10;
+    const y=((e.clientY-rect.top)/rect.height-.5)*-10;
+    card.style.transform=`translateY(-6px) rotateX(${y}deg) rotateY(${x}deg)`;
+    card.style.transition='transform .05s';
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';card.style.transition='transform .4s ease';
+  });
+});
+
+/* ─── WIDGET MODE TOGGLE ─── */
+document.querySelectorAll('.w-mode').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.w-mode').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ─── CUSTOM SCROLLBAR ─── */
+document.documentElement.style.cssText+='scroll-behavior:smooth';
+</script>
+</body>
+</html>
